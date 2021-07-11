@@ -1,0 +1,101 @@
+---
+title: "ISYE6501_HW1"
+author: "IL"
+date: "8/26/2020"
+output:
+  html_document: default
+  PDF_document: default
+---
+Question 2.1:
+Describe a situation or problem from your job, everyday life, current events, etc., for which a classification model would be appropriate. List some (up to 5) predictors that you might use.
+
+
+
+
+
+1)	Students test grades 
+2)	Energy consumption and income level: throughout my work, we are trying to create incentives programs to let customers adopt electric technologies with cheaper prices such as HVAC, induction cooking, etc.. this program will help utilities to participate to reduce their carbon footprint and help US reach the goal of 2050 to reduce GHG emissions. by classifying, we will be able to give out the right incentive for people who consumed lots of energy and also to know low income community.
+3) Human behavior 
+4) Classifying emails “spam”,”priority,inbox”
+5)	Weather classification
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r credit card}
+#Question 2.2
+ 
+library(kernlab)
+credit_card_data = read.table(file="~/Desktop/ISYE6501-\ Introduction\ to\ Analytics\ Modeling/Fall2020hw1/data 2.2/credit_card_data.txt")
+
+#credit_card_data #print table
+str(credit_card_data) #Type of data, this part is useful for me to know the data type I am dealing with 
+
+#summary(credit_card_data) 
+
+#Question 2.2.1
+#Build the SVM model
+model_svm = ksvm(as.matrix(credit_card_data [,1:10]), as.factor(credit_card_data [,11]), type = 'C-svc',   kernel = 'vanilladot', C = 95, scaled = TRUE) #as_factors converts numeric values into a factor with numeric levels
+
+model_svm #print model SVM
+
+#question 2.2.2
+# You are welcome, but not required, to try other (nonlinear) kernels as well; we’re not covering them in this course, but they can sometimes be useful and might provide better predictions than vanilladot.
+
+model_svm2 <- ksvm(as.matrix(credit_card_data [,1:10]), as.factor(credit_card_data [,11]), type="C-svc", kernel="rbfdot", C=95, scaled=TRUE)
+
+
+model_svm2 # After changing values of C, I found 95 is the value to keep.  After running the "rbfdot kernel ", the Radial Basis kernel has the lowest training error compared to "vanilladot" is the linear kernel 
+
+```
+
+I decided to go with model_svm using linear kernel(vanilladot).
+
+``` {r credit card 2}
+#  Sum of a1x1+a2x2+a3x3+...a10x10.
+a = colSums(model_svm@xmatrix[[1]]*model_svm@coef[[1]])
+a0 = -model_svm@b
+pred = predict(model_svm, credit_card_data [,1:10])
+prediction = sum(pred == credit_card_data [,11]) / nrow(credit_card_data)
+a #print a
+a0 #print a0
+prediction #print prediction
+```
+
+Hence, the model's accuracy is 86.39%
+
+``` {r credit card3}
+
+#Question 2.2.3 
+
+#	Using the k-nearest-neighbors classification function kknn contained in the R kknn package, suggest a good value of k, and show how well it classifies that data points in the full data set.  Don’t forget to scale the data (scale=TRUE in kknn).
+
+#Build KNN model
+
+library(kknn)
+
+new_data = {}
+
+ k_value = c(1,2,4,5,8,12)
+ 
+ for (j in length(k_value)){
+   accuracy= c()
+   acc = c()
+for (i in 1:654) {
+  knn = kknn(V11~., credit_card_data[-i,], credit_card_data[i,], k= k_value[j], kernel= "optimal", scale =TRUE)
+  predicted = round(fitted.values(knn))
+  accuracy [i] = (predicted==credit_card_data[i,11])
+}
+ acc[j] = (sum(accuracy/nrow(credit_card_data)))*100
+  k<-k_value[(acc==(acc[j]))]
+
+ }  
+acc
+k 
+
+```
+
+The knn value that gives the best option to classify the data is 12 and its accuracy is 85.32%
