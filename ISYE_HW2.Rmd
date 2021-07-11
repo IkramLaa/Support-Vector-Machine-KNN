@@ -1,0 +1,144 @@
+---
+title: "ISYE6501-HW 2"
+author: "IL"
+date: "8/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 3.1 a
+The data were split into 80% for training and 20% for testing. The LOOCV  was done on train data to identify the parameters using KNN model.the second part is  used to find the accuracies; for the training's data is higher than testing's data, which helps me conclude that data were not overfitted
+
+``````{r credit card 3.1a}
+#Question 3.1
+ #Cross Validation is to maximize the value of limited training data and to estimate how good/accurate is the model against 
+
+library(kknn)
+library(caret)
+library(dplyr)
+library(magrittr)
+library(knitr)
+
+credit_card_data = read.table(file="~/Desktop/ISYE6501-\ Introduction\ to\ Analytics\ Modeling/Fall2020hw2/data 3.1/credit_card_data.txt")
+#credit_card_data 
+#credit_card_data$V11 =as.factor(credit_card_data$V11)
+
+#Generate random sample of 80% of the rows 
+training <- credit_card_data$V11 %>%
+  createDataPartition(p=0.8, list = FALSE)
+#the train data is assigned to be 80%
+train.data = credit_card_data[training,]
+#train.data
+#the test data is assigned to be 20%
+test.data = credit_card_data[-training,]
+
+#Initiate the LOOCV to find the optimal kernel and k-value
+train.control = trainControl(method="LOOCV")
+trControl= train.control
+train.kknn(V11~., data = train.data, kmax = 12,  scale = TRUE)
+
+#Calculate the accuracy of the training data 
+train_acc= c()
+predicted= c()
+
+#test_acc = c()
+for (i in 1:nrow(train.data)){
+   
+  knn = kknn(V11~., train.data[-i,], train.data[i,], k= 12, kernel= "optimal", scale =TRUE)
+  predicted[i] = as.integer(fitted.values(knn)+0.5)
+  
+}
+ train_acc = sum(predicted==train.data[,11])/nrow(train.data)
+ print(train_acc)
+
+test_acc = c()
+predicted= c()
+ 
+for (i in 1:nrow(test.data)){ 
+    knn_1 =  kknn(V11~., test.data[-i,], test.data[i,], k= 12, kernel= "optimal", scale =TRUE)
+    predicted[i] = as.integer(fitted.values(knn_1)+0.5)
+ }
+test_acc = sum(predicted==test.data[,11])/nrow(test.data)
+print(test_acc)
+
+```
+Question 3.1b 
+
+The data were split into 80% training, 10% validation, and 10% testing. Using SVM model, The C-value can be 0.01 for 89.23% accuracy, for other values 0.1, 1, 10, 100 are also hold the same accuracy value as C= 0.01. 
+`````````{r credit card 3.1b}
+#3 sets: train 80% , validation, and test
+library(kernlab)
+credit_card_data$V11 =as.factor(credit_card_data$V11)
+set.seed(1)
+train_data = sort(sample(nrow(credit_card_data), nrow(credit_card_data)*0.8))
+train = credit_card_data[train_data,]
+test =  credit_card_data[-train_data,]
+data_val = sample(nrow(test), nrow(test)/2)
+Validation_1 = test[data_val,]
+Validation_2 = test[-data_val,]
+
+new_data ={}
+x = c(0.00001,0.0001,0.001,0.01,0.1,1, 10, 100)
+accuracy = c()
+for (i in 1:8) {
+
+
+     svm_model <- ksvm(as.matrix(train[,1:10]),as.factor(train[,11]), type = "C-svc", kernel = "vanilladot",  C = x[i],
+		   scaled=TRUE) # have ksvm scale the data for you
+      pred = predict(svm_model, Validation_1[,1:10])
+
+      accuracy[i] = sum(pred == Validation_1[,11]) / nrow(Validation_1)
+      C <-x[(accuracy==(accuracy[i]))]
+}
+accuracy[1:8]
+C
+```
+
+
+
+
+
+
+Question 4.1:
+Describe a situation or problem from your job, everyday life, current events, etc., for which a clustering model would be appropriate. List some (up to 5) predictors that you might use.
+
+
+I work for energy sector and extracting electricity consumption behavior is fun in my work. we will use clustering to find patterns in the daily profiles for a multi-family house, the cluster can find different unique groups of load profile: could be steady use, on peak, off peak, partial peak, and lowest consumption through a day(which could be holidays, if like refrigerator and other necessary appliances are on).
+
+
+
+``` {r iris data}
+
+library('dplyr')
+library(ggplot2)
+library(factoextra)
+iris_data = read.table(file="~/Desktop/ISYE6501-\ Introduction\ to\ Analytics\ Modeling/Fall2020hw2/data 3.1/iris.txt")
+iris = select(iris_data,c(1,2,3,4)) #combine columns from 1to 4
+ 
+#WSS function is With-In Sum-Of-Squares is a measure to explain the homogenity within a cluster. wssplot is a function to plot WSS against the number of clusters 
+wssplot <- function(data, nc =10, seed =1)
+   {
+   wss<-(nrow(data)-1)*sum(apply(data,2,var))
+   for (i in 1:nc){
+     set.seed(seed)
+     wss[i] <- sum(kmeans(data, centers =i)$withinss)}
+   plot(1:nc, wss, type="b", xlab ="Number of clusters", ylab = "within groups sum of squares")
+}
+# This produce an elbow plot 
+wssplot(iris)
+
+#k-means cluster
+results <- kmeans(iris,3)
+results
+
+plot(iris[c(3,4)], col=results$cluster)
+```
+From the above "Elbow Plot" which is a heuristic method, we can tell that number of clusters = 3 solution may be a good fit to the data and that Ican use for K-means analysis. 
+
+K-means Cluster analysis: output several results, for cluster means; it is the mean for each 4 attributes in 3 different cluster.For the clustering vector explains which each data points belongs to one of the three clusters, for example data point 1to 38, it belongs to cluster 3, and so on for other data points.  
+
+The WSS shows the sum for each cluster and also the accuracy = 88.4%. 
+
