@@ -105,7 +105,6 @@ Question 4.1:
 Describe a situation or problem from your job, everyday life, current events, etc., for which a clustering model would be appropriate. List some (up to 5) predictors that you might use.
 
 
-I work for energy sector and extracting electricity consumption behavior is fun in my work. we will use clustering to find patterns in the daily profiles for a multi-family house, the cluster can find different unique groups of load profile: could be steady use, on peak, off peak, partial peak, and lowest consumption through a day(which could be holidays, if like refrigerator and other necessary appliances are on).
 
 
 
